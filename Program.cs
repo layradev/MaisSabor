@@ -1,4 +1,22 @@
+using InduMovel.Context;
+using InduMovel.Repositories;
+using MaisSabor.Models;
+using MaisSabor.Repositories;
+using MaisSabor.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
+
 var builder = WebApplication.CreateBuilder(args);
+
+// Add services to the container.
+builder.Services.AddScoped(sp => Carrinho.GetCarrinhoCompra(sp));
+builder.Services.AddMemoryCache();
+builder.Services.AddSession();
+builder.Services.AddSingleton<IHttpContextAccessor,HttpContextAccessor>();
+builder.Services.AddTransient<ICategoriaRepository, CategoriaRepository>();
+builder.Services.AddTransient<IItemRepository, ItemRepository>();
+builder.Services.AddDbContext<AppDbContext>(options =>options.UseSqlite
+(builder.Configuration.GetConnectionString("DefaulConnection")));
+builder.Services.AddControllersWithViews();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
@@ -15,10 +33,19 @@ if (!app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 app.UseStaticFiles();
-
+app.UseSession();
 app.UseRouting();
 
 app.UseAuthorization();
+app.MapControllerRoute(
+name: "categoriaFiltro",
+pattern: "Item/{action}/{categoria?}",
+defaults: new { Controller = "Item", action = "List" }
+);
+
+app.MapControllerRoute(
+name: "areas",
+pattern: "{area:exists}/{controller=Admin}/{action=Index}/{id?}");
 
 app.MapControllerRoute(
     name: "default",
